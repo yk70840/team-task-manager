@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Sign In | Team Task Manager{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="auth-logo-dot"></span>
+      <span class="auth-logo-text">Team Task Manager</span>
+    </div>
+
+    <p class="auth-eyebrow">Secure access</p>
+    <h1 class="auth-title">Sign in to your workspace</h1>
+    <p class="auth-sub">Manage projects, tasks, and people.</p>
+
+    {% if error %}
+    <div class="auth-error" style="margin-top:1.25rem;">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/login" style="margin-top:1.75rem; display:flex; flex-direction:column; gap:1rem;">
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email"
+          class="form-control" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password"
+          class="form-control" placeholder="Your password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg btn-full" style="margin-top:0.5rem;">
+        Sign In
+      </button>
+    </form>
+
+    <p class="auth-footer">Don't have an account?
+      <a href="/register">Create one</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

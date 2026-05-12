@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Projects | Team Task Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="page-eyebrow">Workspace</p>
+    {% if user.role in ('admin', 'superadmin') %}
+    <h1 class="page-title">All Projects</h1>
+    <p class="page-sub">{{ projects | length }} project{% if projects|length != 1 %}s{% endif %} across the entire system</p>
+    {% else %}
+    <h1 class="page-title">Your Projects</h1>
+    <p class="page-sub">{{ projects | length }} project{% if projects|length != 1 %}s{% endif %} in your workspace</p>
+    {% endif %}
+  </div>
+  <a href="/projects/create" class="btn btn-primary">+ Create Project</a>
+</div>
+
+{% if projects %}
+<div style="display:flex; gap:0.4rem; margin-bottom:1.25rem;">
+  <button class="filter-btn active" onclick="filterProjects('all', this)">All projects</button>
+  <button class="filter-btn" onclick="filterProjects('mine', this)">My projects</button>
+</div>
+<div id="project-grid" style="display:grid; gap:1rem; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));">
+  {% for project in projects %}
+
+  {% if project.tasks %}
+  {% set completed = namespace(count=0) %}
+  {% for task in project.tasks %}
+    {% if task.status == 'completed' %}{% set completed.count = completed.count + 1 %}{% endif %}
+  {% endfor %}
+  {% set pct = (completed.count / project.tasks|length * 100) | round | int %}
+  {% else %}
+  {% set pct = 0 %}
+  {% endif %}
+
+  <a href="/projects/{{ project.id }}"
+     data-owner="{% if project.created_by == user.id %}mine{% else %}other{% endif %}"
+     style="display:flex; flex-direction:column; padding:1.4rem; border-radius:20px; border:1px solid var(--border); background:var(--surface); text-decoration:none; box-shadow:var(--shadow); transition:border-color var(--transition), transform var(--transition);"
+     onmouseover="this.style.borderColor='var(--border-hover)'; this.style.transform='translateY(-2px)'"
+     onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)'">
+
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:0.75rem; flex:1;">
+      <div style="flex:1; min-width:0;">
+        <h2 style="font-size:1rem; font-weight:700; color:var(--text); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ project.name }}</h2>
+        <p style="font-size:0.82rem; color:var(--muted); margin-top:0.4rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+          {{ project.description[:110] if project.description else 'No description provided yet.' }}
+        </p>
+      </div>
+      <span class="badge badge-user" style="flex-shrink:0;">{{ project.tasks|length }}</span>
+    </div>
+
+    {% if project.tasks %}
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progress</span>
+        <span>{{ completed.count }}/{{ project.tasks|length }}</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" data-width="{{ pct }}"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:1rem;">
+      <span style="font-size:0.75rem; color:var(--muted);">{{ project.created_at.strftime('%b %d, %Y') }}</span>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        {% if project.created_by == user.id %}
+        <span style="font-size:0.7rem; font-weight:600; color:var(--accent); background:var(--accent-glow); border:1px solid var(--accent); border-radius:20px; padding:0.15rem 0.55rem;">
+          You
+        </span>
+        {% else %}
+        <span style="font-size:0.7rem; font-weight:600; color:var(--muted); background:var(--panel); border:1px solid var(--border); border-radius:20px; padding:0.15rem 0.55rem;">
+          {{ project.creator.username if project.creator else 'Unknown' }}
+        </span>
+        {% endif %}
+        <span style="font-size:0.75rem; font-weight:600; color:var(--accent);">View →</span>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+<p id="no-project-results" style="display:none; text-align:center; color:var(--muted); font-size:0.875rem; padding:2rem 0;">No projects match this filter.</p>
+
+{% else %}
+<div class="card" style="padding:3rem 2rem; text-align:center;">
+  <div style="width:48px; height:48px; border-radius:14px; background:var(--accent-glow); display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem;">
+    <svg width="22" height="22" fill="none" stroke="var(--accent)" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+    </svg>
+  </div>
+  <p class="empty-state-title">No projects yet</p>
+  <p class="text-muted" style="font-size:0.875rem; margin-bottom:1.5rem;">Create your first project and invite your team to collaborate.</p>
+  <a href="/projects/create" class="btn btn-primary">Create Project</a>
+</div>
+{% endif %}
+{% block scripts %}
+<style>
+  .filter-btn {
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .filter-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+</style>
+<script>
+  // Progress bar widths
+  document.querySelectorAll('.progress-fill[data-width]').forEach(el => {
+    el.style.width = el.dataset.width + '%';
+  });
+
+  // Admin project filter
+  function filterProjects(mode, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const cards = document.querySelectorAll('#project-grid [data-owner]');
+    let visible = 0;
+    cards.forEach(card => {
+      const show = mode === 'all' || card.dataset.owner === 'mine';
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    const empty = document.getElementById('no-project-results');
+    if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+  }
+</script>
+{% endblock %}
+{% endblock %}

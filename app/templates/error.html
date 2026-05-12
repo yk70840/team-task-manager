@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} – {{ title }} | Team Task Manager{% endblock %}
+
+{% block content %}
+{% set icon_cls = 'err-icon--403' if code == 403 else ('err-icon--404' if code == 404 else 'err-icon--500') %}
+{% set code_cls = 'err-code--403' if code == 403 else ('err-code--404' if code == 404 else 'err-code--500') %}
+<style>
+  .err-icon--403 { background: rgba(248,113,113,0.10); }
+  .err-icon--404 { background: rgba(251,191,36,0.10); }
+  .err-icon--500 { background: rgba(99,102,241,0.10); }
+  .err-code--403 { color: var(--danger); }
+  .err-code--404 { color: var(--warning); }
+  .err-code--500 { color: #a5b4fc; }
+</style>
+<div style="min-height:60vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem;">
+  <div class="card" style="padding:3rem 2.5rem; max-width:520px; width:100%; text-align:center;">
+
+    <!-- Icon -->
+    <div class="{{ icon_cls }}" style="width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+      {% if code == 403 %}
+      <svg width="26" height="26" fill="none" stroke="var(--danger)" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+      {% elif code == 404 %}
+      <svg width="26" height="26" fill="none" stroke="var(--warning)" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      {% else %}
+      <svg width="26" height="26" fill="none" stroke="#a5b4fc" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      {% endif %}
+    </div>
+
+    <!-- Error code -->
+    <p class="{{ code_cls }}" style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:0.5rem;">
+      Error {{ code }}
+    </p>
+
+    <h1 style="font-size:1.6rem; font-weight:700; color:var(--text); line-height:1.2; margin-bottom:0.6rem;">
+      {{ title }}
+    </h1>
+    <p style="font-size:0.9rem; color:var(--muted); line-height:1.6; margin-bottom:2rem;">
+      {{ detail }}
+    </p>
+
+    <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+      <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+      <a href="/projects"  class="btn btn-ghost">View Projects</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | Team Task Manager{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div style="display:grid; gap:1rem; grid-template-columns:repeat(3,1fr); margin-bottom:1.75rem;">
+  <div class="stat-card">
+    <p class="stat-label">Total Users</p>
+    <p class="stat-value">{{ total_users }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Projects</p>
+    <p class="stat-value">{{ total_projects }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Tasks</p>
+    <p class="stat-value">{{ total_tasks }}</p>
+  </div>
+</div>
+
+<!-- Main panel -->
+<div class="card" style="padding:1.75rem;">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">Admin</p>
+      <h1 class="page-title">System overview</h1>
+      <p class="page-sub">Monitor users, projects, and tasks across the workspace.</p>
+    </div>
+    <a href="/admin/users" class="btn btn-primary">Manage Users</a>
+  </div>
+
+  <div style="display:grid; gap:1rem; grid-template-columns:1fr 1fr; margin-top:0.5rem;">
+    <div class="card-sm" style="padding:1.25rem 1.4rem;">
+      <p class="stat-label" style="margin-bottom:0.6rem;">System status</p>
+      <p style="font-size:0.875rem; color:var(--text2); line-height:1.6;">
+        Monitor user growth, project volume, and task throughput across the entire workspace.
+      </p>
+    </div>
+    <div class="card-sm" style="padding:1.25rem 1.4rem;">
+      <p class="stat-label" style="margin-bottom:0.75rem;">Quick actions</p>
+      <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <div style="font-size:0.83rem; color:var(--text2); padding:0.5rem 0.75rem; border-radius:8px; background:var(--panel); border:1px solid var(--border);">
+          Review latest user requests
+        </div>
+        <div style="font-size:0.83rem; color:var(--text2); padding:0.5rem 0.75rem; border-radius:8px; background:var(--panel); border:1px solid var(--border);">
+          Verify project approvals
+        </div>
+        <div style="font-size:0.83rem; color:var(--text2); padding:0.5rem 0.75rem; border-radius:8px; background:var(--panel); border:1px solid var(--border);">
+          Audit task assignments
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

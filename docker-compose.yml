@@ -1,0 +1,42 @@
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: ttm_db
+    environment:
+      POSTGRES_DB: team_task_manager
+      POSTGRES_USER: ttm_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ttm_password}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ttm_user -d team_task_manager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── FastAPI application ────────────────────────────────────────
+  web:
+    build: .
+    container_name: team_task_manager
+    ports:
+      - "${PORT:-8765}:${PORT:-8765}"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://ttm_user:${DB_PASSWORD:-ttm_password}@db:5432/team_task_manager
+      - SECRET_KEY=${SECRET_KEY:-supersecret-change-me-in-production}
+      - PORT=${PORT:-8765}
+    depends_on:
+      db:
+        condition: service_healthy   # wait until Postgres is ready
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8765}/')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  pg_data:   # Postgres data persisted across restarts

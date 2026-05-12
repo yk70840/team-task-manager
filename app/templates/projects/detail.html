@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} | Team Task Manager{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <p class="page-eyebrow">Project details</p>
+    <h1 class="page-title">{{ project.name }}</h1>
+    <p class="page-sub">{{ project.description or 'No description available.' }}</p>
+  </div>
+  <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+    {% if is_creator or user.role in ('admin', 'superadmin') %}
+    <a href="/projects/{{ project.id }}/edit" class="btn btn-edit">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      Edit
+    </a>
+    <form method="POST" action="/projects/{{ project.id }}/delete" style="display:inline;"
+          onsubmit="return confirmAction('Delete &quot;{{ project.name }}&quot; and all its tasks? This cannot be undone.', this, 'danger');">
+      <button type="submit" class="btn btn-danger">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Delete
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Stats row -->
+<div style="display:grid; gap:1rem; grid-template-columns:repeat(3,1fr); margin-bottom:1.5rem;">
+  <div class="card-sm" style="padding:1.2rem 1.4rem;">
+    <p class="stat-label">Members</p>
+    <p class="stat-value" style="font-size:1.75rem; margin-top:0.5rem;">{{ members|length }}</p>
+  </div>
+  <div class="card-sm" style="padding:1.2rem 1.4rem;">
+    <p class="stat-label">Tasks</p>
+    <p class="stat-value" style="font-size:1.75rem; margin-top:0.5rem;">{{ project.tasks|length }}</p>
+  </div>
+  <div class="card-sm" style="padding:1.2rem 1.4rem;">
+    <p class="stat-label">Created</p>
+    <p style="font-size:1rem; font-weight:700; color:var(--text); margin-top:0.5rem;">{{ project.created_at.strftime('%b %d, %Y') }}</p>
+  </div>
+</div>
+
+<!-- Main grid -->
+<div id="proj-grid" style="display:grid; gap:1.25rem;">
+
+  <!-- Tasks panel -->
+  <div class="card" style="padding:1.75rem;">
+    <div class="page-header" style="margin-bottom:1rem;">
+      <div>
+        <h2 style="font-size:1.1rem; font-weight:700; color:var(--text);">Tasks</h2>
+        <p style="font-size:0.82rem; color:var(--muted); margin-top:0.2rem;">{{ project.tasks|length }} task{% if project.tasks|length != 1 %}s{% endif %} in this project</p>
+      </div>
+      {% if can_add_task %}
+      <a href="/projects/{{ project.id }}/tasks/create" class="btn btn-primary btn-sm">+ New Task</a>
+      {% endif %}
+    </div>
+
+    {% if project.tasks %}
+    <!-- Filter bar -->
+    <div id="task-filter-bar" style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem;">
+      <button class="filter-btn active" data-filter="all" onclick="filterTasks('all', this)">All</button>
+      <button class="filter-btn" data-filter="todo" onclick="filterTasks('todo', this)">To Do</button>
+      <button class="filter-btn" data-filter="in_progress" onclick="filterTasks('in_progress', this)">In Progress</button>
+      <button class="filter-btn" data-filter="completed" onclick="filterTasks('completed', this)">Done</button>
+    </div>
+
+    <div id="task-list" style="display:flex; flex-direction:column; gap:0.6rem;">
+      {% for task in project.tasks %}
+      <div class="task-row" data-status="{{ task.status.value }}"
+           style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.9rem 1.1rem; border-radius:12px; border:1px solid var(--border); background:var(--surface2);">
+        <div style="flex:1; min-width:0;">
+          <h3 style="font-size:0.9rem; font-weight:600; color:var(--text); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ task.title }}</h3>
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.15rem;">
+            <p style="font-size:0.78rem; color:var(--muted); margin:0;">
+              {{ task.assignee.username if task.assignee else 'Unassigned' }}
+            </p>
+            {% if task.priority.value == 'high' %}
+              <span style="font-size:0.7rem; font-weight:700; color:#ef4444;">● High</span>
+            {% elif task.priority.value == 'medium' %}
+              <span style="font-size:0.7rem; font-weight:700; color:#f59e0b;">● Med</span>
+            {% elif task.priority.value == 'low' %}
+              <span style="font-size:0.7rem; font-weight:700; color:#64748b;">● Low</span>
+            {% endif %}
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; flex-shrink:0; margin-left:auto;">
+          {% if task.status.value == 'completed' %}
+            <span class="badge badge-done">Done</span>
+          {% elif task.status.value == 'in_progress' %}
+            <span class="badge badge-progress">In progress</span>
+          {% else %}
+            <span class="badge badge-pending">Pending</span>
+          {% endif %}
+          <a href="/tasks/{{ task.id }}" class="btn btn-ghost btn-sm">View</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p id="no-filter-results" style="display:none; text-align:center; color:var(--muted); font-size:0.875rem; padding:1.5rem 0;">No tasks match this filter.</p>
+
+    {% else %}
+    <div class="empty-state">
+      <p class="empty-state-title">No tasks yet</p>
+      <p>Add the first task to this project.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div style="display:flex; flex-direction:column; gap:1rem;">
+
+    <!-- Overview -->
+    <div class="card-sm" style="padding:1.25rem 1.4rem;">
+      <p class="stat-label" style="margin-bottom:0.6rem;">Owner</p>
+      <p style="font-size:0.95rem; font-weight:700; color:var(--text);">{{ project.creator.username }}</p>
+    </div>
+
+    <!-- Completion progress -->
+    {% if project.tasks %}
+    {% set completed = namespace(count=0) %}
+    {% for task in project.tasks %}
+      {% if task.status == 'completed' %}{% set completed.count = completed.count + 1 %}{% endif %}
+    {% endfor %}
+    <div class="card-sm" style="padding:1.25rem 1.4rem;">
+      <p class="stat-label" style="margin-bottom:0.6rem;">Completion</p>
+      <div class="progress-label">
+        <span>{{ completed.count }} of {{ project.tasks|length }} done</span>
+        <span>{{ (completed.count / project.tasks|length * 100) | round | int }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" data-width="{{ (completed.count / project.tasks|length * 100) | round | int }}"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Members panel -->
+    <div class="card-sm" style="padding:1.25rem 1.4rem;">
+      <p class="stat-label" style="margin-bottom:0.75rem;">Members</p>
+      <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.85rem;">
+        {% for member in members %}
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--accent-glow); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:var(--accent); flex-shrink:0;">
+              {{ member.username[0] | upper }}
+            </div>
+            <span style="font-size:0.82rem; font-weight:600; color:var(--text);">{{ member.username }}</span>
+          </div>
+          {% if member.id == project.created_by %}
+            <span class="badge badge-admin" style="font-size:0.65rem;">Owner</span>
+          {% elif is_creator or user.role in ('admin', 'superadmin') %}
+            <form method="POST" action="/projects/{{ project.id }}/members/{{ member.id }}/remove" style="display:inline;"
+                  onsubmit="return confirmAction('Remove {{ member.username }} from this project?', this, 'danger');">
+              <button type="submit" style="background:none; border:none; cursor:pointer; color:var(--muted); padding:0.1rem 0.25rem; border-radius:4px; font-size:0.75rem; line-height:1;"
+                      title="Remove member" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+            </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if is_creator or user.role in ('admin', 'superadmin') %}
+      <!-- Add member form -->
+      <div style="border-top:1px solid var(--border); padding-top:0.75rem; margin-top:0.25rem;">
+        <p style="font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:0.5rem;">Add member by email</p>
+        <form method="POST" action="/projects/{{ project.id }}/members/add"
+              style="display:flex; gap:0.4rem;">
+          <input type="email" name="email" required placeholder="user@example.com"
+                 class="form-control" style="font-size:0.8rem; padding:0.4rem 0.65rem; flex:1; min-width:0;">
+          <button type="submit" class="btn btn-primary btn-sm" style="flex-shrink:0; white-space:nowrap;">Add</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<style>
+  @media (min-width: 900px) {
+    #proj-grid { grid-template-columns: 1fr 280px; }
+  }
+  .filter-btn {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .filter-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+</style>
+
+{% block scripts %}
+<script>
+  // Progress bar widths
+  document.querySelectorAll('.progress-fill[data-width]').forEach(el => {
+    el.style.width = el.dataset.width + '%';
+  });
+
+  // Task filter
+  function filterTasks(status, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const rows = document.querySelectorAll('.task-row');
+    let visible = 0;
+    rows.forEach(row => {
+      const match = status === 'all' || row.dataset.status === status;
+      // Use 'flex' explicitly — rows use display:flex inline and setting ''
+      // would remove it, falling back to block and breaking the layout.
+      row.style.display = match ? 'flex' : 'none';
+      if (match) visible++;
+    });
+
+    const empty = document.getElementById('no-filter-results');
+    if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+  }
+</script>
+{% endblock %}
+{% endblock %}

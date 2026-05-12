@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}My Profile | Team Task Manager{% endblock %}
+
+{% block content %}
+<div style="max-width:680px; margin:0 auto;">
+
+  <!-- Header -->
+  <div class="page-header" style="margin-bottom:1.75rem;">
+    <div>
+      <p class="page-eyebrow">Account</p>
+      <h1 class="page-title">My Profile</h1>
+      <p class="page-sub">Manage your account details and password.</p>
+    </div>
+  </div>
+
+  <!-- Avatar + stats strip -->
+  <div class="card" style="padding:1.75rem; margin-bottom:1.25rem;">
+    <div style="display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap;">
+      <!-- Avatar circle -->
+      <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--accent),#a78bfa); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:800; color:#fff; flex-shrink:0;">
+        {{ user.username[0] | upper }}
+      </div>
+      <div style="flex:1; min-width:0;">
+        <p style="font-size:1.15rem; font-weight:700; color:var(--text); margin:0;">{{ user.username }}</p>
+        <p style="font-size:0.82rem; color:var(--muted); margin-top:0.2rem;">{{ user.email }}</p>
+        <div style="margin-top:0.5rem;">
+          {% if user.role == 'superadmin' %}
+            <span class="badge badge-superadmin">Superadmin</span>
+          {% elif user.role == 'admin' %}
+            <span class="badge badge-admin">Admin</span>
+          {% else %}
+            <span class="badge badge-user">User</span>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Quick stats -->
+      <div style="display:flex; gap:1.25rem; flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <p style="font-size:1.4rem; font-weight:800; color:var(--text); margin:0;">{{ project_count }}</p>
+          <p style="font-size:0.72rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Projects</p>
+        </div>
+        <div style="text-align:center;">
+          <p style="font-size:1.4rem; font-weight:800; color:var(--text); margin:0;">{{ task_count }}</p>
+          <p style="font-size:0.72rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Tasks</p>
+        </div>
+        <div style="text-align:center;">
+          <p style="font-size:1.4rem; font-weight:800; color:var(--success); margin:0;">{{ done_count }}</p>
+          <p style="font-size:0.72rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Done</p>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.75rem; color:var(--muted); margin-top:1rem; border-top:1px solid var(--border); padding-top:0.75rem;">
+      Member since {{ user.created_at.strftime('%B %d, %Y') }}
+    </p>
+  </div>
+
+  {% if error and not pw_error %}
+  <div class="auth-error" style="margin-bottom:1rem;">{{ error }}</div>
+  {% endif %}
+
+  <!-- Edit info -->
+  <div class="card" style="padding:1.75rem; margin-bottom:1.25rem;">
+    <h2 style="font-size:1rem; font-weight:700; color:var(--text); margin-bottom:1.25rem;">Edit info</h2>
+    <form method="POST" action="/profile/update"
+          onsubmit="return confirmAction('Save profile changes?', this, 'edit');"
+          style="display:flex; flex-direction:column; gap:1rem;">
+      <div class="form-group">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" id="username" name="username" required minlength="3"
+               class="form-control" value="{{ user.username }}">
+      </div>
+      <div class="form-group">
+        <label for="email" class="form-label">Email address</label>
+        <input type="email" id="email" name="email" required
+               class="form-control" value="{{ user.email }}">
+      </div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </div>
+    </form>
+  </div>
+
+  {% if error and pw_error %}
+  <div class="auth-error" style="margin-bottom:1rem;">{{ error }}</div>
+  {% endif %}
+
+  <!-- Change password -->
+  <div class="card" style="padding:1.75rem;">
+    <h2 style="font-size:1rem; font-weight:700; color:var(--text); margin-bottom:1.25rem;">Change password</h2>
+    <form method="POST" action="/profile/change-password"
+          style="display:flex; flex-direction:column; gap:1rem;">
+      <div class="form-group">
+        <label for="current_password" class="form-label">Current password</label>
+        <input type="password" id="current_password" name="current_password" required
+               class="form-control" placeholder="Enter your current password">
+      </div>
+      <div style="display:grid; gap:1rem; grid-template-columns:1fr 1fr;">
+        <div class="form-group">
+          <label for="new_password" class="form-label">New password</label>
+          <input type="password" id="new_password" name="new_password" required minlength="8"
+                 class="form-control" placeholder="Min. 8 characters">
+        </div>
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">Confirm new password</label>
+          <input type="password" id="confirm_password" name="confirm_password" required
+                 class="form-control" placeholder="Repeat new password">
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button type="submit" class="btn btn-edit">Update password</button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

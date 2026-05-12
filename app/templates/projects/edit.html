@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Edit Project | Team Task Manager{% endblock %}
+
+{% block content %}
+<div style="max-width:600px; margin:0 auto;">
+  <div class="page-header" style="margin-bottom:1.5rem;">
+    <div>
+      <p class="page-eyebrow">Edit Project</p>
+      <h1 class="page-title">{{ project.name }}</h1>
+      <p class="page-sub">Update the project details.</p>
+    </div>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← View project</a>
+  </div>
+
+  <div class="card" style="padding:2rem;">
+    <form method="POST" action="/projects/{{ project.id }}/edit"
+          onsubmit="return confirmAction('Save changes to this project?', this, 'edit');"
+          style="display:flex; flex-direction:column; gap:1.25rem;">
+      <div class="form-group">
+        <label for="name" class="form-label">Project name</label>
+        <input type="text" id="name" name="name" required minlength="3" value="{{ project.name }}"
+          class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="description" class="form-label">Description</label>
+        <textarea id="description" name="description" rows="5"
+          class="form-control">{{ project.description }}</textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:0.6rem; padding-top:0.25rem;">
+        <a href="/projects/{{ project.id }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

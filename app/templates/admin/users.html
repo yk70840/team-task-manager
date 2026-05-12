@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Manage Users | Team Task Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="page-eyebrow">Administration</p>
+    <h1 class="page-title">Team members</h1>
+    <p class="page-sub">{{ users | length }} user{% if users|length != 1 %}s{% endif %} registered</p>
+  </div>
+  <a href="/admin/dashboard" class="btn btn-ghost">← Admin home</a>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      {% set is_self      = u.id == user.id %}
+      {% set target_rank  = {'superadmin': 3, 'admin': 2, 'user': 1, 'member': 1}[u.role] | default(1) %}
+      {% set actor_rank   = {'superadmin': 3, 'admin': 2, 'user': 1, 'member': 1}[user.role] | default(1) %}
+      {% set can_manage   = actor_rank > target_rank and not is_self %}
+      <tr>
+        <td style="color:var(--text); font-weight:600;">
+          {{ u.username }}
+          {% if is_self %}
+          <span class="badge badge-admin" style="margin-left:0.4rem; font-size:0.65rem;">You</span>
+          {% endif %}
+        </td>
+        <td>{{ u.email }}</td>
+        <td>
+          {% if u.role == 'superadmin' %}
+            <span class="badge badge-superadmin">Superadmin</span>
+          {% elif u.role == 'admin' %}
+            <span class="badge badge-admin">Admin</span>
+          {% else %}
+            <span class="badge badge-user">Member</span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            {% if is_self %}
+            <span style="font-size:0.78rem; color:var(--muted); font-style:italic; padding:0.35rem 0;">Cannot modify own account</span>
+            {% elif not can_manage %}
+            <span style="font-size:0.78rem; color:var(--muted); font-style:italic; padding:0.35rem 0;">Insufficient rank</span>
+            {% else %}
+            <!-- Role change -->
+            <form method="POST" action="/admin/users/{{ u.id }}/role" style="display:inline-flex; align-items:center; gap:0.5rem;"
+                  id="role-form-{{ u.id }}">
+              <select name="role"
+                      data-original-role="{{ u.role }}"
+                      data-uid="{{ u.id }}"
+                      class="form-control"
+                      style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.8rem; width:auto;"
+                      onchange="confirmRoleChange(this)">
+                <option value="member" {% if u.role in ('user', 'member') %}selected{% endif %}>Member</option>
+                <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                {% if user.role == 'superadmin' %}
+                <option value="superadmin" {% if u.role == 'superadmin' %}selected{% endif %}>Superadmin</option>
+                {% endif %}
+              </select>
+            </form>
+
+            <!-- Delete user -->
+            <form method="POST" action="/admin/users/{{ u.id }}/delete" style="display:inline;"
+                  onsubmit="return confirmAction('Remove {{ u.username }} from the system? This cannot be undone.', this, 'danger');">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% block scripts %}
+<script>
+  function confirmRoleChange(selectEl) {
+    const original = selectEl.dataset.originalRole;
+    const newRole  = selectEl.value;
+    const uid      = selectEl.dataset.uid;
+
+    if (newRole === original) return;
+
+    // Revert visually while modal is open
+    selectEl.value = original;
+
+    openConfirmModal(
+      `Change this user's role to "${newRole}"?`,
+      () => {
+        // Restore the chosen role so the form submits the right value
+        selectEl.value = newRole;
+        selectEl.dataset.originalRole = newRole;
+        document.getElementById('role-form-' + uid).submit();
+      },
+      'edit'
+    );
+  }
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Team Task Manager{% endblock %}
+
+{% block content %}
+<!-- Stats row -->
+<div class="stat-grid" style="margin-bottom:1.75rem;">
+  <div class="stat-card">
+    <p class="stat-label">Total Tasks</p>
+    <p class="stat-value">{{ total_tasks }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Completed</p>
+    <p class="stat-value green">{{ completed_tasks }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Pending</p>
+    <p class="stat-value yellow">{{ pending_tasks }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Overdue</p>
+    <p class="stat-value red">{{ overdue_tasks }}</p>
+  </div>
+</div>
+
+<!-- Main grid -->
+<div style="display:grid; gap:1.25rem; grid-template-columns:1fr;">
+<div style="display:grid; gap:1.25rem;">
+<!-- Responsive split at lg -->
+<div style="display:grid; gap:1.25rem; grid-template-columns: 1fr;">
+
+  <div style="display:contents" id="dash-grid">
+
+    <!-- Recent projects -->
+    <div class="card" style="padding:1.75rem;">
+      <div class="page-header">
+        <div>
+          <p class="page-eyebrow">Projects</p>
+          <h2 class="page-title" style="font-size:1.4rem;">Active workspaces</h2>
+        </div>
+        <a href="/projects/create" class="btn btn-primary">+ New Project</a>
+      </div>
+
+      {% if projects %}
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        {% for project in projects %}
+        <a href="/projects/{{ project.id }}"
+           style="display:block; padding:1rem 1.2rem; border-radius:14px; border:1px solid var(--border); background:var(--surface2); text-decoration:none; transition:border-color var(--transition), transform var(--transition);"
+           onmouseover="this.style.borderColor='var(--border-hover)'; this.style.transform='translateY(-1px)'"
+           onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)'">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;">
+            <div style="flex:1; min-width:0;">
+              <h3 style="font-size:0.95rem; font-weight:600; color:var(--text); margin:0;">{{ project.name }}</h3>
+              <p style="font-size:0.82rem; color:var(--muted); margin-top:0.25rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                {{ project.description[:90] if project.description else 'No description yet.' }}
+              </p>
+            </div>
+            <span class="badge badge-user">{{ project.tasks|length }} tasks</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <p class="empty-state-title">No projects yet</p>
+        <p>Create your first project to get started.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Recent tasks -->
+    <div class="card" style="padding:1.75rem;">
+      <div class="page-header">
+        <div>
+          <p class="page-eyebrow">Tasks</p>
+          <h2 class="page-title" style="font-size:1.4rem;">Your latest work</h2>
+        </div>
+        <a href="/projects" style="font-size:0.82rem; color:var(--muted); font-weight:600; text-decoration:none;">View all →</a>
+      </div>
+
+      {% if recent_tasks %}
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        {% for task in recent_tasks %}
+        <a href="/tasks/{{ task.id }}"
+           style="display:block; padding:1rem 1.2rem; border-radius:14px; border:1px solid var(--border); background:var(--surface2); text-decoration:none; transition:border-color var(--transition), transform var(--transition);"
+           onmouseover="this.style.borderColor='var(--border-hover)'; this.style.transform='translateY(-1px)'"
+           onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)'">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+            <div style="flex:1; min-width:0;">
+              <h3 style="font-size:0.95rem; font-weight:600; color:var(--text); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ task.title }}</h3>
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
+                <p style="font-size:0.8rem; color:var(--muted); margin:0;">{{ task.project.name if task.project else 'No project' }}</p>
+                {% if task.priority == 'high' %}
+                  <span style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.72rem; font-weight:700; color:#ef4444;">● High</span>
+                {% elif task.priority == 'low' %}
+                  <span style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.72rem; font-weight:700; color:#64748b;">● Low</span>
+                {% elif task.priority == 'medium' %}
+                  <span style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.72rem; font-weight:700; color:#f59e0b;">● Med</span>
+                {% endif %}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
+              {% if task.status == 'completed' %}
+                <span class="badge badge-done">Done</span>
+              {% elif task.status == 'in_progress' %}
+                <span class="badge badge-progress">In progress</span>
+              {% else %}
+                <span class="badge badge-pending">Pending</span>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <p class="empty-state-title">No tasks yet</p>
+        <p>Tasks assigned to you will appear here.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+</div>
+</div>
+
+<style>
+  @media (min-width: 960px) {
+    #dash-grid { display: grid !important; grid-template-columns: 1.5fr 1fr; gap: 1.25rem; }
+  }
+</style>
+{% endblock %}
