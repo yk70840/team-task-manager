@@ -95,6 +95,10 @@ async def register(request: Request, db: AsyncSession = Depends(get_db)):
     email = str(form_data.get("email", ""))
     password = str(form_data.get("password", ""))
     confirm_password = str(form_data.get("confirm_password", ""))
+    role_input = str(form_data.get("role", "member")).lower()
+    # Only allow self-registration as member or admin; superadmin must be seeded
+    allowed_roles = {UserRole.member.value, UserRole.admin.value}
+    selected_role = role_input if role_input in allowed_roles else UserRole.member.value
 
     if not username or not email or not password:
         return render_template(
@@ -138,7 +142,7 @@ async def register(request: Request, db: AsyncSession = Depends(get_db)):
         username=username,
         email=email,
         hashed_password=hashed_password,
-        role=UserRole.member.value,
+        role=selected_role,
         is_active=True,
     )
     db.add(new_user)

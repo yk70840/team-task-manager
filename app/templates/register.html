@@ -42,6 +42,77 @@
             class="form-control" placeholder="Repeat password">
         </div>
       </div>
+
+      <!-- Role Selector -->
+      <div class="form-group" style="margin-top:0.25rem;">
+        <label class="form-label" style="margin-bottom:0.6rem;">Account Type</label>
+        <input type="hidden" id="role-input" name="role" value="member">
+        <div id="role-toggle" style="
+          display: flex;
+          background: var(--surface-alt, rgba(255,255,255,0.06));
+          border: 1px solid var(--border, rgba(255,255,255,0.1));
+          border-radius: 10px;
+          padding: 4px;
+          gap: 4px;
+          position: relative;
+        ">
+          <button type="button" id="role-btn-member" onclick="selectRole('member')" style="
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.55rem 1rem;
+            border-radius: 7px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: var(--accent, #6c63ff);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(108,99,255,0.35);
+          ">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            Member
+          </button>
+          <button type="button" id="role-btn-admin" onclick="selectRole('admin')" style="
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.55rem 1rem;
+            border-radius: 7px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: transparent;
+            color: var(--text-muted, #9ca3af);
+            box-shadow: none;
+          ">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Admin
+          </button>
+        </div>
+        <p id="role-description" style="
+          margin-top: 0.5rem;
+          font-size: 0.78rem;
+          color: var(--text-muted, #9ca3af);
+          line-height: 1.4;
+        ">Members can view projects and manage their assigned tasks.</p>
+      </div>
+
       <button type="submit" class="btn btn-primary btn-lg btn-full" style="margin-top:0.5rem;">
         Create Account
       </button>
@@ -52,4 +123,36 @@
     </p>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const roleDescriptions = {
+    member: 'Members can view projects and manage their assigned tasks.',
+    admin:  'Admins can create & manage projects, assign tasks, and oversee team members.'
+  };
+
+  function selectRole(role) {
+    document.getElementById('role-input').value = role;
+
+    const activeStyle = {
+      background: 'var(--accent, #6c63ff)',
+      color: '#fff',
+      boxShadow: '0 2px 8px rgba(108,99,255,0.35)'
+    };
+    const inactiveStyle = {
+      background: 'transparent',
+      color: 'var(--text-muted, #9ca3af)',
+      boxShadow: 'none'
+    };
+
+    ['member', 'admin'].forEach(r => {
+      const btn = document.getElementById(`role-btn-${r}`);
+      const s   = r === role ? activeStyle : inactiveStyle;
+      Object.assign(btn.style, s);
+    });
+
+    document.getElementById('role-description').textContent = roleDescriptions[role];
+  }
+</script>
 {% endblock %}
